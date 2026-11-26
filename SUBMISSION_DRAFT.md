@@ -16,7 +16,7 @@ Deadline: 2026-12-09 08:00 UTC (15:00 WIB). No registration needed; submit durin
   layer: it distinguishes self-operated Agent IDs from rented ones, a real
   abuse pattern (paid "lend your Agent ID" offers) that the standard
   balanceOf gate cannot see.
-- **Reward receiving address:** TODO confirm with user (suggest mamana.ai BSC 0x0a0357898F563230B4C38B60A31cE5cE82b9484e)
+- **Reward receiving address:** mamana.ai BSC 0x0a0357898F563230B4C38B60A31cE5cE82b9484e (confirmed by user 2026-11-26)
 - **Eligibility push (Innovation Award needs >=30 Agent ID addresses interacting):**
   pledge from mamana + rata first, then outreach: Boltbook community post,
   X post with demo, direct invites to Agent ID holders met via free-mint
