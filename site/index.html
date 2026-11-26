@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrueAgent Registry — Proof of Self-Operation for Agent ID Holders</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, sans-serif; max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; line-height: 1.55; }
+  h1 { font-size: 1.7rem; margin-bottom: 4px; }
+  .sub { opacity: .75; margin-top: 0; }
+  .card { border: 1px solid #8884; border-radius: 12px; padding: 16px; margin: 16px 0; }
+  button { font-size: 1rem; padding: 10px 18px; border-radius: 10px; border: 0; cursor: pointer; background: #f0b90b; color: #111; font-weight: 600; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  input { font-size: 1rem; padding: 9px; border-radius: 8px; border: 1px solid #8886; width: 100%; box-sizing: border-box; }
+  code { word-break: break-all; }
+  .ok { color: #1a9e54; font-weight: 600; } .no { color: #d33; font-weight: 600; }
+  pre { overflow-x: auto; background: #8882; padding: 12px; border-radius: 8px; }
+</style>
+</head>
+<body>
+<h1>TrueAgent Registry</h1>
+<p class="sub">Proof of self-operation for Agent ID holders — BNB Chain</p>
+
+<div class="card">
+  <p><strong>The problem.</strong> Agent IDs are being rented out for a few dollars so strangers can farm
+  Agent-ID-gated launches with someone else's identity. Holding an Agent ID proves an identity exists —
+  it does <em>not</em> prove who operates it.</p>
+  <p><strong>The signal.</strong> TrueAgent is a public registry where a holder pledges on-chain
+  <em>“I operate this Agent ID myself”</em> and other holders endorse operators they trust.
+  Any launchpad or gated mint can query one function before allocating a per-Agent-ID quota:</p>
+  <pre>isSelfOperated(address) → bool   // TrueAgentRegistry</pre>
+  <p>No token. No mint. No sale. The registry holds no funds and has no owner or admin functions.</p>
+</div>
+
+<div class="card">
+  <p>Registry contract: <code id="contractAddr">0x0c085fd87e25DeDfCc65871FC4cC27177AA4f4c9</code><br>
+  Agent ID registry (SPACE ID): <code>0x60b9262456de011f7d15a54cdd8c48baaa8b022f</code></p>
+  <p>Active pledges: <strong id="statPledged">…</strong> · Endorsements: <strong id="statEndorsed">…</strong></p>
+</div>
+
+<div class="card">
+  <button id="connectBtn">Connect wallet</button>
+  <p id="walletLine">Wallet: not connected</p>
+  <p id="statusLine"></p>
+  <button id="pledgeBtn" disabled>Pledge: I operate my own Agent ID</button>
+  <button id="revokeBtn" disabled>Revoke my pledge</button>
+  <hr>
+  <p><strong>Endorse a pledged operator</strong></p>
+  <input id="endorseAddr" placeholder="0x… operator address">
+  <p><button id="endorseBtn" disabled>Endorse</button></p>
+  <p id="txLine"></p>
+</div>
+
+<div class="card">
+  <p><strong>For projects:</strong> call <code>isSelfOperated(user)</code> on the registry before granting a
+  per-Agent-ID allocation. Rented IDs that never pledge carry no trust signal; a pledge also dies automatically
+  if the address stops holding its Agent ID.</p>
+  <p><small>TrueAgent is an independent community project, not affiliated with Binance. It never asks for seed
+  phrases, private keys, pairing codes, or login QR scans — pledging is a normal transaction you confirm in your
+  own wallet.</small></p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<script>
+const REGISTRY = "0x0c085fd87e25DeDfCc65871FC4cC27177AA4f4c9";
+const AGENT_ID = "0x60b9262456de011f7d15a54cdd8c48baaa8b022f";
+const RPC = "https://bsc-dataseed.bnbchain.org";
+const ABI = [
+  "function pledgeSelfOperated()", "function revokePledge()", "function endorse(address)",
+  "function isSelfOperated(address) view returns (bool)", "function isAgentIDHolder(address) view returns (bool)",
+  "function totalPledged() view returns (uint256)", "function totalEndorsements() view returns (uint256)",
+  "function pledgeOf(address) view returns (bool, uint64, uint32)"
+];
+const readProvider = new ethers.JsonRpcProvider(RPC);
+const readReg = new ethers.Contract(REGISTRY, ABI, readProvider);
+let signer = null, account = null;
+
+async function refreshStats() {
+  try {
+    document.getElementById("statPledged").textContent = (await readReg.totalPledged()).toString();
+    document.getElementById("statEndorsed").textContent = (await readReg.totalEndorsements()).toString();
+  } catch { document.getElementById("statPledged").textContent = "— (contract not live yet?)"; }
+}
+async function refreshStatus() {
+  if (!account) return;
+  const holder = await readReg.isAgentIDHolder(account);
+  const selfOp = await readReg.isSelfOperated(account);
+  document.getElementById("statusLine").innerHTML =
+    "Agent ID holder: " + (holder ? '<span class="ok">yes</span>' : '<span class="no">no</span>') +
+    " · Self-operated pledge: " + (selfOp ? '<span class="ok">active</span>' : "not pledged");
+  document.getElementById("pledgeBtn").disabled = !holder || selfOp;
+  document.getElementById("revokeBtn").disabled = !selfOp;
+  document.getElementById("endorseBtn").disabled = !holder;
+}
+async function sendTx(fn) {
+  const line = document.getElementById("txLine");
+  try { line.textContent = "Confirm in your wallet…"; const tx = await fn(); line.textContent = "Sent: " + tx.hash;
+    await tx.wait(); line.textContent = "Confirmed: " + tx.hash; refreshStats(); refreshStatus();
+  } catch (e) { line.textContent = "Failed: " + (e.shortMessage || e.message); }
+}
+document.getElementById("connectBtn").onclick = async () => {
+  if (!window.ethereum) { alert("No wallet found. Open this page in your wallet's dApp browser."); return; }
+  const p = new ethers.BrowserProvider(window.ethereum);
+  await p.send("eth_requestAccounts", []);
+  try { await p.send("wallet_switchEthereumChain", [{ chainId: "0x38" }]); } catch {}
+  signer = await p.getSigner(); account = await signer.getAddress();
+  document.getElementById("walletLine").textContent = "Wallet: " + account;
+  refreshStatus();
+};
+document.getElementById("pledgeBtn").onclick = () => sendTx(() => new ethers.Contract(REGISTRY, ABI, signer).pledgeSelfOperated());
+document.getElementById("revokeBtn").onclick = () => sendTx(() => new ethers.Contract(REGISTRY, ABI, signer).revokePledge());
+document.getElementById("endorseBtn").onclick = () => {
+  const a = document.getElementById("endorseAddr").value.trim();
+  if (!ethers.isAddress(a)) { alert("Invalid address"); return; }
+  sendTx(() => new ethers.Contract(REGISTRY, ABI, signer).endorse(a));
+};
+refreshStats();
+</script>
+</body>
+</html>
