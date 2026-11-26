@@ -3,6 +3,7 @@ Deadline: 2026-12-09 08:00 UTC (15:00 WIB). No registration needed; submit durin
 
 - **Project name:** TrueAgent Registry
 - **Website:** https://trueagent.ayaforge.workers.dev (live, deployed 2026-11-26)
+- **Demo video (57s):** https://trueagent.ayaforge.workers.dev/demo.mp4
 - **Contract address(es):** 0x0c085fd87e25DeDfCc65871FC4cC27177AA4f4c9 (TrueAgentRegistry, BNB Chain) — deployed 2026-11-18, Sourcify exact_match (creation + runtime) 2026-11-26
 - **Source code:** https://github.com/RejekiELL/trueagent-registry (public, MIT — created and pushed by assistant 2026-11-26 via the user's GitHub token)
 - **Agent ID usage description:**
