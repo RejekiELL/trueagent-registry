@@ -83,6 +83,7 @@ node test/test-create2.js # CREATE2 deployment-path test (SingletonFactory flow)
 ## Website
 
 **Live: https://trueagent.ayaforge.workers.dev**
+**Demo video (57s): https://trueagent.ayaforge.workers.dev/demo.mp4**
 
 `site/index.html` — a single static page: live registry stats read from BSC,
 wallet connect (injected provider, BNB Chain), pledge / revoke / endorse, and
