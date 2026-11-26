@@ -5,60 +5,175 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TrueAgent Registry — Proof of Self-Operation for Agent ID Holders</title>
 <style>
-  :root { color-scheme: light dark; }
-  body { font-family: system-ui, sans-serif; max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; line-height: 1.55; }
-  h1 { font-size: 1.7rem; margin-bottom: 4px; }
-  .sub { opacity: .75; margin-top: 0; }
-  .card { border: 1px solid #8884; border-radius: 12px; padding: 16px; margin: 16px 0; }
-  button { font-size: 1rem; padding: 10px 18px; border-radius: 10px; border: 0; cursor: pointer; background: #f0b90b; color: #111; font-weight: 600; }
-  button:disabled { opacity: .45; cursor: not-allowed; }
-  input { font-size: 1rem; padding: 9px; border-radius: 8px; border: 1px solid #8886; width: 100%; box-sizing: border-box; }
-  code { word-break: break-all; }
-  .ok { color: #1a9e54; font-weight: 600; } .no { color: #d33; font-weight: 600; }
-  pre { overflow-x: auto; background: #8882; padding: 12px; border-radius: 8px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: #050505; }
+  body {
+    font-family: ui-monospace, "SF Mono", "Roboto Mono", Menlo, monospace;
+    background: #050505; color: #fff; min-height: 100vh;
+    padding: 40px 16px 56px; position: relative; overflow-x: hidden;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 3;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,.028) 0 1px, transparent 1px 4px);
+  }
+  body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: radial-gradient(560px 340px at 50% 30%, rgba(50,212,61,.10), transparent 70%);
+  }
+  .col { max-width: 600px; margin: 0 auto; position: relative; z-index: 1; }
+  .badge {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: #9a9a9a;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #32d43d; animation: pulse 1.8s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+  .wordmark {
+    font-family: ui-sans-serif, system-ui, sans-serif; font-weight: 800; letter-spacing: -.04em;
+    font-size: 56px; text-align: center; margin-top: 18px; line-height: 1;
+    text-shadow: 1px 0 rgba(255,0,60,.14), -1px 0 rgba(0,200,255,.14);
+  }
+  .cursor { display: inline-block; width: .52em; height: .82em; background: #32d43d; margin-left: 6px; vertical-align: baseline; animation: blink 1.05s steps(1) infinite; }
+  @keyframes blink { 0%,55% { opacity: 1; } 56%,100% { opacity: 0; } }
+  h1 {
+    font-family: ui-sans-serif, system-ui, sans-serif; font-weight: 700; font-size: 27px;
+    text-align: center; margin-top: 22px; letter-spacing: -.01em;
+  }
+  .sub { text-align: center; color: #9a9a9a; font-size: 13px; margin-top: 10px; line-height: 1.6; }
+  .card {
+    background: #101010; border: 1px solid #1c1c1c; border-radius: 12px;
+    margin-top: 28px; padding: 18px; box-shadow: 0 18px 44px -22px rgba(50,212,61,.35);
+  }
+  .cardhead {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    font-size: 12px; color: #9a9a9a; border-bottom: 1px solid #1c1c1c; padding-bottom: 12px;
+  }
+  .cardhead .cmd { color: #fff; }
+  .cardhead .cmd b { color: #32d43d; font-weight: 700; }
+  .mini-cursor { display: inline-block; width: 7px; height: 12px; background: #32d43d; vertical-align: -1px; animation: blink 1.05s steps(1) infinite; }
+  .readout { color: #32d43d; white-space: nowrap; }
+  .addr { font-size: 11.5px; color: #9a9a9a; line-height: 1.9; margin-top: 14px; word-break: break-all; }
+  .addr code { color: #e8e8e8; }
+  .stats { display: flex; gap: 10px; margin-top: 14px; }
+  .stat { flex: 1; border: 1px solid #1c1c1c; border-radius: 8px; padding: 10px 12px; background: #0c0c0b; }
+  .stat .k { font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #555; }
+  .stat .v { font-size: 22px; color: #fff; margin-top: 4px; }
+  button {
+    font-family: inherit; font-weight: 700; font-size: 12.5px; cursor: pointer;
+    border-radius: 8px; border: 1px solid #262626; background: #141414; color: #fff; padding: 12px 16px;
+  }
+  button:hover:not(:disabled) { background: #1b1b1b; }
+  button:disabled { background: #141414; color: #555; cursor: not-allowed; }
+  button.primary {
+    width: 100%; height: 50px; margin-top: 14px; font-size: 13px;
+    background: rgba(50,212,61,.12); border-color: rgba(50,212,61,.55); color: #32d43d;
+  }
+  button.primary:hover:not(:disabled) { background: rgba(50,212,61,.18); }
+  button.primary:disabled { background: #141414; border-color: #262626; color: #555; }
+  .btnrow { display: flex; gap: 10px; margin-top: 10px; }
+  .btnrow button { flex: 1; }
+  #connectBtn { width: 100%; margin-top: 16px; }
+  .line { font-size: 12.5px; color: #9a9a9a; margin-top: 12px; line-height: 1.6; word-break: break-all; }
+  .line:empty { display: none; }
+  .ok { color: #32d43d; font-weight: 700; } .no { color: #ff5a5a; font-weight: 700; }
+  hr.sep { border: 0; border-top: 1px solid #1c1c1c; margin: 18px 0 4px; }
+  .cardlabel { font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: #555; margin-top: 14px; }
+  input {
+    width: 100%; height: 48px; margin-top: 10px; border-radius: 8px; border: 1px solid #262626;
+    background: #0c0c0b; color: #fff; font-family: inherit; font-size: 13px; padding: 0 14px;
+  }
+  input::placeholder { color: #555; }
+  #endorseBtn { width: 100%; margin-top: 10px; }
+  .rows { margin-top: 28px; border-top: 1px solid #141414; }
+  .row { display: flex; gap: 14px; padding: 18px 2px; border-bottom: 1px solid #141414; }
+  .num {
+    flex: none; width: 24px; height: 24px; border: 1px solid #262626; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; font-size: 11px; color: #9a9a9a; margin-top: 2px;
+  }
+  .num.first { border-color: rgba(50,212,61,.55); color: #32d43d; }
+  .row h2 { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 15.5px; font-weight: 700; }
+  .row p { font-size: 12.5px; color: #9a9a9a; line-height: 1.65; margin-top: 5px; }
+  .row code { color: #e8e8e8; word-break: break-all; }
+  pre {
+    background: #0c0c0b; border: 1px solid #1c1c1c; border-radius: 8px; padding: 12px;
+    font-size: 12px; color: #32d43d; overflow-x: auto; margin-top: 10px;
+  }
+  footer {
+    display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    font-size: 11px; color: #555; margin-top: 30px;
+  }
+  .fineprint { font-size: 11px; color: #555; line-height: 1.7; margin-top: 18px; }
 </style>
 </head>
 <body>
-<h1>TrueAgent Registry</h1>
-<p class="sub">Proof of self-operation for Agent ID holders — BNB Chain</p>
+<div class="col">
+  <div class="badge"><span class="dot"></span> TrueAgent · Registry live on BNB Chain</div>
+  <div class="wordmark">trueagent<span class="cursor"></span></div>
+  <h1>Holding an Agent ID proves an identity exists. Not who operates it.</h1>
+  <p class="sub">Proof of self-operation for Agent ID holders — a public registry on BNB Chain.</p>
 
-<div class="card">
-  <p><strong>The problem.</strong> Agent IDs are being rented out for a few dollars so strangers can farm
-  Agent-ID-gated launches with someone else's identity. Holding an Agent ID proves an identity exists —
-  it does <em>not</em> prove who operates it.</p>
-  <p><strong>The signal.</strong> TrueAgent is a public registry where a holder pledges on-chain
-  <em>“I operate this Agent ID myself”</em> and other holders endorse operators they trust.
-  Any launchpad or gated mint can query one function before allocating a per-Agent-ID quota:</p>
-  <pre>isSelfOperated(address) → bool   // TrueAgentRegistry</pre>
-  <p>No token. No mint. No sale. The registry holds no funds and has no owner or admin functions.</p>
-</div>
+  <div class="card">
+    <div class="cardhead">
+      <span class="cmd"><b>$</b> trueagent pledge --registry <span class="mini-cursor"></span></span>
+      <span class="readout">[ registry live ]</span>
+    </div>
+    <p class="addr">
+      Registry: <code id="contractAddr">0x0c085fd87e25DeDfCc65871FC4cC27177AA4f4c9</code><br>
+      Agent ID (SPACE ID): <code>0x60b9262456de011f7d15a54cdd8c48baaa8b022f</code>
+    </p>
+    <div class="stats">
+      <div class="stat"><div class="k">Active pledges</div><div class="v" id="statPledged">…</div></div>
+      <div class="stat"><div class="k">Endorsements</div><div class="v" id="statEndorsed">…</div></div>
+    </div>
+    <button id="connectBtn">Connect wallet ↗</button>
+    <p class="line" id="walletLine">Wallet: not connected</p>
+    <p class="line" id="statusLine"></p>
+    <button class="primary" id="pledgeBtn" disabled>Pledge: I operate my own Agent ID</button>
+    <div class="btnrow"><button id="revokeBtn" disabled>Revoke my pledge</button></div>
+    <hr class="sep">
+    <p class="cardlabel">Endorse a pledged operator</p>
+    <input id="endorseAddr" placeholder="> 0x… operator address">
+    <button id="endorseBtn" disabled>Endorse</button>
+    <p class="line" id="txLine"></p>
+  </div>
 
-<div class="card">
-  <p>Registry contract: <code id="contractAddr">0x0c085fd87e25DeDfCc65871FC4cC27177AA4f4c9</code><br>
-  Agent ID registry (SPACE ID): <code>0x60b9262456de011f7d15a54cdd8c48baaa8b022f</code></p>
-  <p>Active pledges: <strong id="statPledged">…</strong> · Endorsements: <strong id="statEndorsed">…</strong></p>
-</div>
+  <div class="rows">
+    <div class="row">
+      <div class="num first">01</div>
+      <div>
+        <h2>The problem</h2>
+        <p>Agent IDs are being rented out for a few dollars so strangers can farm Agent-ID-gated launches with someone else's identity. Holding an Agent ID proves an identity <em>exists</em> — it does not prove who operates it.</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="num">02</div>
+      <div>
+        <h2>The signal</h2>
+        <p>A holder pledges on-chain — <em>“I operate this Agent ID myself”</em> — and other holders endorse operators they trust. Any launchpad or gated mint can query one function before allocating a per-Agent-ID quota:</p>
+        <pre>isSelfOperated(address) → bool</pre>
+      </div>
+    </div>
+    <div class="row">
+      <div class="num">03</div>
+      <div>
+        <h2>Nothing to buy</h2>
+        <p>No token. No mint. No sale. The registry holds no funds and has no owner or admin functions. A pledge also dies automatically if the address stops holding its Agent ID.</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="num">04</div>
+      <div>
+        <h2>For projects</h2>
+        <p>Call <code>isSelfOperated(user)</code> on the registry before granting a per-Agent-ID allocation. Rented IDs that never pledge carry no trust signal. Source is verified on Sourcify (exact match) and public on GitHub.</p>
+      </div>
+    </div>
+  </div>
 
-<div class="card">
-  <button id="connectBtn">Connect wallet</button>
-  <p id="walletLine">Wallet: not connected</p>
-  <p id="statusLine"></p>
-  <button id="pledgeBtn" disabled>Pledge: I operate my own Agent ID</button>
-  <button id="revokeBtn" disabled>Revoke my pledge</button>
-  <hr>
-  <p><strong>Endorse a pledged operator</strong></p>
-  <input id="endorseAddr" placeholder="0x… operator address">
-  <p><button id="endorseBtn" disabled>Endorse</button></p>
-  <p id="txLine"></p>
-</div>
+  <p class="fineprint">TrueAgent is an independent community project, not affiliated with Binance. It never asks for seed phrases, private keys, pairing codes, or login QR scans — pledging is a normal transaction you confirm in your own wallet.</p>
 
-<div class="card">
-  <p><strong>For projects:</strong> call <code>isSelfOperated(user)</code> on the registry before granting a
-  per-Agent-ID allocation. Rented IDs that never pledge carry no trust signal; a pledge also dies automatically
-  if the address stops holding its Agent ID.</p>
-  <p><small>TrueAgent is an independent community project, not affiliated with Binance. It never asks for seed
-  phrases, private keys, pairing codes, or login QR scans — pledging is a normal transaction you confirm in your
-  own wallet.</small></p>
+  <footer>
+    <span>© trueagent</span>
+    <span>trueagent.ayaforge.workers.dev</span>
+  </footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
