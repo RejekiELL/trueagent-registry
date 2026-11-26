@@ -2,9 +2,9 @@
 Deadline: 2026-12-09 08:00 UTC (15:00 WIB). No registration needed; submit during the period.
 
 - **Project name:** TrueAgent Registry
-- **Website:** TODO after hosting (GitHub Pages: https://rejekiell.github.io/trueagent-registry/ — repo must be created/uploaded by user; assistant has no GitHub login in VM)
-- **Contract address(es):** 0x0c085fd87e25DeDfCc65871FC4cC27177AA4f4c9 (TrueAgentRegistry, BNB Chain) — after deployment + BscScan verification
-- **Source code:** GitHub repo (public, MIT) — TODO user creates repo `trueagent-registry` and uploads this bundle; then verify source on BscScan (compiler v0.8.26+commit, optimizer 200 runs, constructor arg = Agent ID registry address)
+- **Website:** https://trueagent.ayaforge.workers.dev (live, deployed 2026-11-26)
+- **Contract address(es):** 0x0c085fd87e25DeDfCc65871FC4cC27177AA4f4c9 (TrueAgentRegistry, BNB Chain) — deployed 2026-11-18, Sourcify exact_match (creation + runtime) 2026-11-26
+- **Source code:** https://github.com/RejekiELL/trueagent-registry (public, MIT — created and pushed by assistant 2026-11-26 via the user's GitHub token)
 - **Agent ID usage description:**
   TrueAgent integrates Agent ID at its core: the SPACE ID Agent ID registry
   (0x60b9262456de011f7d15a54cdd8c48baaa8b022f) is the contract's only external
